@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+.eggs/
+*.egg-info/
+
+# Local data
+*.db
+*.sqlite3
+reports/
+console-logs/
+rack-snapshot/
+*.log
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local secrets / config
+.env
+.env.local
+config.local.py

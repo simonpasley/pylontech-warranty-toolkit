@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pylontech Battery Health Check</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Pylontech Battery Health Check</h1>
+        <p class="subtitle">Read every cell, generate a warranty-claim ready report — no battery expertise required.</p>
+        <p class="trust-signal">Read-only diagnostic. Destructive commands (factory / reset / erase / config writes) are blocked at the server.</p>
+    </header>
+
+    <main>
+
+    <!-- Step 1: Connect -->
+    <section class="card connect-card">
+        <h2>1. Connect</h2>
+        <p class="hint">Plug your USB-RS232 console cable into the <strong>master pack's RJ45 console port</strong> (NOT the CAN port). Connecting to the master gives you the whole-rack view.</p>
+        <div class="row">
+            <select id="port-select">
+                <option value="">Select port…</option>
+            </select>
+            <button id="btn-refresh" type="button" title="Re-scan available serial ports">↻</button>
+            <button id="btn-connect" type="button">Connect to battery</button>
+            <button id="btn-disconnect" type="button" disabled>Disconnect</button>
+        </div>
+        <p class="muted">Connecting sends a 1200-baud wakeup frame, then opens the console at 115200 baud. Use the master pack's <strong>console</strong> port — not CAN, RS485 or Link.</p>
+        <div id="connection-status" class="status">Not connected.</div>
+    </section>
+
+    <!-- Step 2: Rack overview -->
+    <section class="card rack-card hidden" id="rack-section">
+        <h2>2. Rack overview</h2>
+        <p class="hint">Live readings for every pack in the rack. <strong>Cell-voltage spread</strong> (max cell − min cell) is the at-a-glance health indicator: <span class="legend healthy">&lt; 30 mV healthy</span> <span class="legend degrading">30–50 mV degrading</span> <span class="legend failed">&gt; 50 mV failed</span></p>
+        <div class="row">
+            <button id="btn-rack" type="button">Refresh rack overview</button>
+            <button id="btn-scan" type="button" class="primary">⚡ Scan whole rack &amp; build full report</button>
+            <span class="muted" id="rack-time"></span>
+        </div>
+        <p class="muted">A whole-rack scan typically takes ~1 minute for an 8-pack rack (one full diagnostic per pack over RS232). The button stays disabled until it finishes.</p>
+
+        <div id="scan-progress" class="dump-progress hidden">
+            <div class="progress-row">
+                <strong id="scan-label">Scanning rack…</strong>
+                <span class="muted" id="scan-elapsed">0.0 s</span>
+            </div>
+            <div class="progress-bar"><div id="scan-bar" class="progress-fill"></div></div>
+            <div class="muted" id="scan-detail">Discovering packs…</div>
+        </div>
+
+        <div id="rack-totals" class="rack-totals hidden">
+            <div class="rack-total">
+                <span class="k">Rack power</span>
+                <span class="v" id="total-power">--</span>
+                <span class="sub" id="total-power-sub">--</span>
+            </div>
+            <div class="rack-total">
+                <span class="k">Average SOC</span>
+                <span class="v" id="total-soc">--</span>
+                <span class="sub" id="total-soc-sub">--</span>
+            </div>
+            <div class="rack-total">
+                <span class="k">Stored / capacity</span>
+                <span class="v" id="total-capacity">--</span>
+                <span class="sub" id="total-capacity-sub">--</span>
+            </div>
+        </div>
+
+        <div id="scan-summary" class="hidden"></div>
+        <div class="table-wrap">
+            <table id="rack-table">
+                <thead>
+                    <tr>
+                        <th>Pack</th>
+                        <th>Voltage</th>
+                        <th>Current</th>
+                        <th>SOC</th>
+                        <th>State</th>
+                        <th>V min</th>
+                        <th>V max</th>
+                        <th>Spread</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Step 3: Per-pack diagnostic -->
+    <section class="card diagnose-card hidden" id="diagnose-section">
+        <h2>3. Full diagnostic</h2>
+        <p class="hint">Runs all six warranty-relevant commands (<code>info</code>, <code>pwr</code>, <code>bat</code>, <code>soh</code>, <code>stat</code>, <code>data event</code>) and interprets the results for you. Click <strong>Diagnose</strong> on any row in the rack table above, or pick a pack here:</p>
+        <div class="row">
+            <label for="diag-pack-id">Pack address:</label>
+            <input id="diag-pack-id" type="number" min="1" max="16" placeholder="1–16" style="max-width: 110px;">
+            <button id="btn-diagnose" type="button">Run full diagnostic</button>
+        </div>
+        <div id="diagnose-result"></div>
+    </section>
+
+    <!-- Step 4: Event-log dumps for warranty -->
+    <section class="card hidden" id="eventlog-section">
+        <h2>4. Event-log dumps <span class="muted">(for Pylontech RMA)</span></h2>
+        <p class="hint">Pylontech's RMA team typically asks for "Event data" — the full event log of each suspect pack. The two dumps below are the console-native equivalents of BatteryView's event-log export.</p>
+        <p class="hint important"><strong>Important — these dumps are pack-local.</strong> The <code>log</code> and <code>data event</code> commands only return data from the pack the cable is <strong>physically plugged into right now</strong>. To dump pack 8's event log: disconnect, move the cable to pack 8's console port, click Connect, then click the dump button. The tool will ask which pack the cable is in before each dump and will stamp that into the filename so you don't mix them up.</p>
+        <div class="row">
+            <button id="btn-eventlog" type="button">Dump full event log (.txt)</button>
+            <button id="btn-eventhistory" type="button" class="secondary">Dump full event history (slow — every stored item)</button>
+        </div>
+        <p class="muted">The event-log dump usually takes 30–60 seconds (~10 pages). The event-history dump walks every stored item and can take several minutes.</p>
+
+        <div id="dump-progress" class="dump-progress hidden">
+            <div class="progress-row">
+                <strong id="dump-label">Capturing…</strong>
+                <span class="muted" id="dump-elapsed">0.0 s</span>
+            </div>
+            <div class="progress-bar"><div id="dump-bar" class="progress-fill"></div></div>
+            <div class="muted" id="dump-detail">Starting…</div>
+        </div>
+    </section>
+
+    <!-- Step 5: Console passthrough -->
+    <section class="card console-card hidden" id="console-section">
+        <h2>5. Console passthrough <span class="muted">(advanced)</span></h2>
+        <p class="hint">Send a Pylontech native console command directly. Only read-only diagnostic commands are accepted — the server enforces an allowlist (<code>info</code>, <code>pwr</code>, <code>bat</code>, <code>soh</code>, <code>stat</code>, <code>log</code>, <code>data</code>, <code>time</code>, <code>alarm</code>, <code>unit</code>, <code>help</code>, <code>ver</code>, <code>sn</code>, <code>fault</code>). Anything that writes config or controls FETs (<code>config&nbsp;…</code>, <code>ctrl&nbsp;…</code>, <code>factory</code>, <code>reset</code>, <code>shut</code>) is rejected with HTTP 403.</p>
+        <div class="row">
+            <input id="console-input" type="text" placeholder="e.g. pwr 8" autocomplete="off">
+            <button id="btn-console" type="button">Send</button>
+        </div>
+        <pre id="console-output" class="console-output"></pre>
+    </section>
+
+    </main>
+
+    <!-- Confirm-which-pack modal: opened before any pack-local dump -->
+    <div id="dump-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dump-modal-title">
+        <div class="modal-card">
+            <h3 id="dump-modal-title">Which pack is the cable in right now?</h3>
+            <p>The dump you're about to run only captures data from the pack the cable is <strong>physically plugged into</strong>. The pack address you enter here is stamped into the filename — it doesn't change what the BMS sends.</p>
+            <div class="row">
+                <label for="dump-pack-id">Pack address (1–16):</label>
+                <input id="dump-pack-id" type="number" min="1" max="16" placeholder="e.g. 8" style="max-width: 110px;">
+            </div>
+            <p class="muted">If you're not sure, look at a pack's address-DIP-switch or run <code>info</code> in the console section after connecting.</p>
+            <div class="actions">
+                <button id="dump-modal-cancel" type="button" class="secondary">Cancel</button>
+                <button id="dump-modal-go" type="button" class="primary">Start dump</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Pylontech Battery Health Check</strong> — Console-mode diagnostics for US3000C / US5000 racks.</p>
+        <p class="footer-disclaimer">
+            <strong>Unofficial community tool.</strong> Not affiliated with, endorsed by or warranted by Pylontech Technology Co. Ltd or any of its distributors.
+            The author and contributors accept <strong>zero liability</strong> for damage to batteries, BMS modules, inverters, cables, computers, property or persons; or for any voided manufacturer warranty.
+            Use entirely at your own risk. Lithium battery work carries inherent danger — if you are not competent and qualified, do not proceed.
+            See the project <a href="https://github.com/" target="_blank" rel="noopener">LICENSE</a> for full terms.
+        </p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

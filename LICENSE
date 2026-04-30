@@ -1,0 +1,72 @@
+PYLONTECH BATTERY HEALTH CHECK
+Source-Available, No-Resale License
+
+Copyright (c) 2026 Brunswick Electrical Services Ltd. All rights reserved.
+
+PERMITTED USES
+
+You are permitted to:
+
+  1. Use this software, free of charge, for any diagnostic purpose,
+     including commercial diagnostic work (for example, a battery installer
+     using the toolkit to diagnose a customer's battery as part of a paid
+     service-call).
+
+  2. Read, study and modify the source code for your own use, or for the
+     use of your business or employer.
+
+  3. Distribute unmodified copies of this software free of charge,
+     provided that the copyright notice, this licence and all attribution
+     remain intact.
+
+  4. Submit modifications, fixes and improvements back to the upstream
+     project.
+
+PROHIBITED USES
+
+You are NOT permitted to:
+
+  1. Sell, license, sublicense, rent, lease or otherwise distribute this
+     software (or any modified or derivative version of it) in exchange
+     for any monetary or other commercial consideration.
+
+  2. Bundle, package, embed or include this software in any paid product,
+     paid software offering, paid service tier, or other commercial
+     package that the recipient pays for.
+
+  3. Remove or alter the copyright notice, the original author
+     attribution, or this licence file.
+
+  4. Use the project name, the original author's name, or any associated
+     branding in a manner that implies endorsement, partnership or
+     official affiliation.
+
+  5. Use this software for any purpose that violates applicable law.
+
+NO TRADEMARK GRANT
+
+This licence does not grant any rights to any trademarks, service marks,
+trade names or logos of the original author or of any third party
+(including but not limited to Pylontech, US3000C, US5000 or BatteryView).
+
+NO WARRANTY / NO LIABILITY
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, RELIABILITY AND NON-INFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS, COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY OR CONSEQUENTIAL
+DAMAGES (INCLUDING BUT NOT LIMITED TO PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA OR PROFITS; OR BUSINESS INTERRUPTION); FOR ANY
+DAMAGE TO BATTERIES, BATTERY MANAGEMENT SYSTEMS, INVERTERS, CABLES,
+COMPUTERS, OTHER PROPERTY OR PERSONS; OR FOR ANY VOIDED MANUFACTURER
+WARRANTY ARISING IN ANY WAY OUT OF THE USE, MISUSE OR INABILITY TO USE
+THIS SOFTWARE, HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE),
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+USE OF THIS SOFTWARE IS ENTIRELY AT YOUR OWN RISK.
+
+If you do not accept these terms in full, you do not have permission to
+use, copy, modify or distribute this software.
