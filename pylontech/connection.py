@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 # Prefer /dev/cu.* ports on macOS (/dev/tty.* waits for DCD signal which
 # Pylontech batteries don't provide, causing read hangs).
 # List cu.* patterns first so they appear at the top of the port selector.
-MACOS_PORT_PATTERNS = [
+SERIAL_PORT_PATTERNS = [
+    # macOS
     '/dev/cu.wchusbserial*',
     '/dev/cu.usbserial*',
     '/dev/cu.SLAB_USBtoUART*',
@@ -21,7 +22,12 @@ MACOS_PORT_PATTERNS = [
     '/dev/tty.usbserial*',
     '/dev/tty.SLAB_USBtoUART*',
     '/dev/tty.usbmodem*',
+    # Linux (Raspberry Pi etc.)
+    '/dev/ttyUSB*',
+    '/dev/ttyACM*',
 ]
+# Backwards-compat alias
+MACOS_PORT_PATTERNS = SERIAL_PORT_PATTERNS
 
 # Pylontech wakeup frame - sent at 1200 baud to wake battery from sleep.
 # This is an RS-485 protocol frame: ~20014682C0048520FCC3\r
@@ -69,26 +75,37 @@ class ConnectionManager:
 
     @staticmethod
     def detect_ports() -> list[dict]:
-        """Auto-detect CH341/PCB001 serial ports on macOS.
+        """Auto-detect USB-RS232/RS485 serial ports on macOS and Linux.
 
         Returns list of dicts with 'port' and 'description' keys.
         """
         found = []
         seen = set()
-        for pattern in MACOS_PORT_PATTERNS:
+        for pattern in SERIAL_PORT_PATTERNS:
             for port_path in sorted(glob.glob(pattern)):
                 if port_path not in seen:
                     seen.add(port_path)
-                    desc = 'CH341 USB-RS485' if 'wch' in port_path.lower() else 'USB Serial'
+                    lower = port_path.lower()
+                    if 'wch' in lower:
+                        desc = 'CH341 USB-RS485'
+                    elif 'ttyusb' in lower or 'ttyacm' in lower:
+                        desc = 'USB Serial (Linux)'
+                    else:
+                        desc = 'USB Serial'
                     found.append({'port': port_path, 'description': desc})
 
         # Also try pyserial's port listing as fallback
         if not found:
             try:
                 from serial.tools import list_ports
+                accepted_prefixes = (
+                    '/dev/tty.', '/dev/cu.',           # macOS
+                    '/dev/ttyUSB', '/dev/ttyACM',      # Linux
+                    '/dev/serial/',                    # Linux by-id/by-path symlinks
+                )
                 for port_info in list_ports.comports():
                     port_path = port_info.device
-                    if port_path.startswith('/dev/tty.') or port_path.startswith('/dev/cu.'):
+                    if port_path.startswith(accepted_prefixes):
                         if port_path not in seen:
                             seen.add(port_path)
                             desc = port_info.description or 'Serial Port'

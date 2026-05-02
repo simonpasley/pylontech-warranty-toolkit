@@ -77,7 +77,8 @@ The tool is a small local web app written in Python. It runs on your own compute
 |---|---|
 | macOS 10.15+ | Tested. Port appears as `/dev/cu.usbserial-XXXXXXXX` (PL2303-driver clones may show as `/dev/cu.usbmodemXXX`). |
 | Windows 10 / 11 | Tested. Port appears as `COM3` / `COM4` etc. FTDI / CH340 / CP210x drivers usually built in or auto-installed. |
-| Linux | Tested on Ubuntu / Debian. Port appears as `/dev/ttyUSB0` etc. Add your user to the `dialout` group if you get permission errors (`sudo usermod -aG dialout $USER`, then log out and back in). |
+| Linux | Tested on Ubuntu / Debian (incl. Raspberry Pi OS). Port appears as `/dev/ttyUSB0` etc. Add your user to the `dialout` group if you get permission errors (`sudo usermod -aG dialout $USER`, then log out and back in). |
+| Raspberry Pi | Tested on Pi 4 / Pi 5 with Raspberry Pi OS Lite 64-bit. See [`docs/RASPBERRY-PI-DEPLOYMENT.md`](docs/RASPBERRY-PI-DEPLOYMENT.md) for an always-on remote-diagnostic node setup (systemd + optional Tailscale). |
 
 ---
 
